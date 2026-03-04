@@ -25,7 +25,7 @@ WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
 WEB3FORMS_ACCESS_KEY = '985c430b-3359-4dae-9d19-28b4bae5b7b3'
 
 # Admin email where you want to receive notifications
-ADMIN_EMAIL = 'shodiyatohheb400@gmail.com'
+ADMIN_EMAIL = 'shodiyatoheeb400@gmail.com'
 
 # Admin credentials
 ADMIN_USERNAME = 'admin'
